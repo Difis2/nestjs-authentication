@@ -3,15 +3,13 @@ import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
 import { DrizzleAsyncProvider } from '../drizzle/drizzle.provider';
 import { NodePgDatabase } from 'drizzle-orm/node-postgres';
-import * as schema from "./../drizzle/schema";
+import * as schema from './../drizzle/schema';
 import { eq } from 'drizzle-orm';
 import { hash } from 'bcryptjs';
 
 @Injectable()
 export class UsersService {
-  constructor(
-    @Inject(DrizzleAsyncProvider) private db: NodePgDatabase<typeof schema>
-  ) {}
+  constructor(@Inject(DrizzleAsyncProvider) private db: NodePgDatabase<typeof schema>) {}
   async create(createUserDto: CreateUserDto) {
     const newUser = await this.db
       .insert(schema.user)
@@ -22,7 +20,7 @@ export class UsersService {
       .returning();
     const { ...result } = newUser[0];
     return {
-      message: "Account registered successfully!",
+      message: 'Account registered successfully!',
       user: result,
     };
   }
@@ -39,6 +37,11 @@ export class UsersService {
   async findOneByEmail(email: string) {
     return await this.db.query.user.findFirst({
       where: eq(schema.user.email, email),
+    });
+  }
+  async findOneByUsername(username: string) {
+    return await this.db.query.user.findFirst({
+      where: eq(schema.user.username, username),
     });
   }
 

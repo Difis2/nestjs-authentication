@@ -4,20 +4,11 @@ import { AuthService } from './auth.service';
 import { UsersService } from '../user/users.service';
 import { drizzleProvider } from '../drizzle/drizzle.provider';
 import { JwtModule } from '@nestjs/jwt';
-import { APP_GUARD } from '@nestjs/core';
-import { AuthGuard } from './auth.guard';
+import { LocalStrategy } from './strategys/local.strategy';
 
 @Module({
   controllers: [AuthController],
-  providers: [
-    AuthService,
-    ...drizzleProvider,
-    UsersService,
-    {
-      provide: APP_GUARD,
-      useClass: AuthGuard,
-    },
-  ],
+  providers: [AuthService, ...drizzleProvider, UsersService, LocalStrategy],
   imports: [
     JwtModule.register({
       global: true,
