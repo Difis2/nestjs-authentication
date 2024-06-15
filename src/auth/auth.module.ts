@@ -6,10 +6,11 @@ import { drizzleProvider } from '../drizzle/drizzle.provider';
 import { JwtModule } from '@nestjs/jwt';
 import { LocalStrategy } from './strategys/local.strategy';
 import { JwtStrategy } from './strategys/jwt.strategy';
+import { GoogleStrategy } from './strategys/google.strategy';
 
 @Module({
   controllers: [AuthController],
-  providers: [AuthService, ...drizzleProvider, UsersService, LocalStrategy, JwtStrategy],
+  providers: [AuthService, ...drizzleProvider, UsersService, LocalStrategy, JwtStrategy, GoogleStrategy],
   imports: [
     JwtModule.register({
       secret: process.env.JWT_TOKEN,

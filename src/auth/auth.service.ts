@@ -1,15 +1,19 @@
-import { Injectable } from '@nestjs/common';
+import { Inject, Injectable } from '@nestjs/common';
 import { UsersService } from '../user/users.service';
 import { compare } from 'bcryptjs';
 import { CreateUserDto } from '../user/dto/create-user.dto';
 import { JwtService } from '@nestjs/jwt';
 import { User } from '../user/entities/user.entity';
+import * as schema from './../drizzle/schema';
+import { DrizzleAsyncProvider } from 'src/drizzle/drizzle.provider';
+import { NodePgDatabase } from 'drizzle-orm/node-postgres';
 
 @Injectable()
 export class AuthService {
   constructor(
     private usersService: UsersService,
-    private jwtService: JwtService
+    private jwtService: JwtService,
+    @Inject(DrizzleAsyncProvider) private db: NodePgDatabase<typeof schema>
   ) {}
 
   async login(user: User): Promise<any> {
@@ -33,5 +37,30 @@ export class AuthService {
     const isPasswordCorrect = await compare(pass, user.password);
     if (!isPasswordCorrect) return null;
     return user;
+  }
+  async googleLogin(req) {
+    if (!req.user) {
+      return 'No user from google';
+    }
+    const user = await this.usersService.findOneByEmail(req.user.email);
+    if (!user) {
+      const newUser = await this.db
+        .insert(schema.user)
+        .values({
+          email: req.user.email,
+          password: undefined,
+          username: undefined,
+          image: req.user.picture,
+          isEmailVerified: true,
+        })
+        .returning();
+      const { ...result } = newUser[0];
+      return result;
+    }
+
+    return {
+      message: 'User information from google',
+      user: req.user,
+    };
   }
 }

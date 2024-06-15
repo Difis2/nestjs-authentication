@@ -5,7 +5,7 @@ import { boolean, pgTable, serial, text, varchar } from 'drizzle-orm/pg-core';
  */
 export const user = pgTable('user', {
   id: serial('id').primaryKey(),
-  username: text('username').notNull(),
+  username: text('username'),
   email: text('email'),
   password: varchar('password', { length: 256 }),
   isEmailVerified: boolean('isEmailVerified').default(false),
