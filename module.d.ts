@@ -5,5 +5,8 @@ declare namespace NodeJS {
     JWT_TOKEN: string;
     GOOGLE_CLIENT_ID: string;
     GOOGLE_CLIENT_SECRET: string;
+    EMAIL_HOST: string;
+    EMAIL_USERNAME: string;
+    EMAIL_PASSWORD: string;
   }
 }

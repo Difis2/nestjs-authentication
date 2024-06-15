@@ -1,4 +1,4 @@
-import { Body, Controller, Post, HttpCode, HttpStatus, Get, Request, UseGuards } from '@nestjs/common';
+import { Body, Controller, Post, HttpCode, HttpStatus, Get, Request, UseGuards, Res } from '@nestjs/common';
 import { AuthService } from './auth.service';
 import { CreateUserDto } from '../user/dto/create-user.dto';
 import { LocalAuthGuard } from './guards/local.guard';
@@ -33,5 +33,15 @@ export class AuthController {
   @UseGuards(GoogleOAuthGuard)
   googleAuthRedirect(@Request() req) {
     return this.authService.googleLogin(req);
+  }
+  @UseGuards(JwtAuthGuard)
+  @Get('send-email')
+  sendMailer(@Res() response: any) {
+    const mail = this.authService.sendMail();
+
+    return response.status(200).json({
+      message: 'success',
+      mail,
+    });
   }
 }
