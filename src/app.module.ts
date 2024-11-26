@@ -8,7 +8,7 @@ import { ThrottlerModule, ThrottlerModuleOptions } from '@nestjs/throttler';
 @Module({
   imports: [
     ThrottlerModule.forRoot(<ThrottlerModuleOptions>(<unknown>{
-      ttl: 60,
+      ttl: 6000,
       limit: 10,
     })),
     AuthModule,
