@@ -19,20 +19,20 @@ export class AuthService {
   ) {}
 
   async login(user: User): Promise<any> {
-    const payload = { sub: user.id, username: user.username };
+    const payload = { sub: user.id, email: user.email };
     return {
       access_token: await this.jwtService.signAsync(payload),
     };
   }
   async register(dto: CreateUserDto): Promise<any> {
-    const user = await this.usersService.findOneByUsername(dto.username);
+    const user = await this.usersService.findOneByEmail(dto.email);
     if (user) {
       throw new Error('Email is already registered!');
     }
     return this.usersService.create(dto);
   }
-  async validateUser(username: string, pass: string): Promise<User | null> {
-    const user = await this.usersService.findOneByUsername(username);
+  async validateUser(email: string, pass: string): Promise<User | null> {
+    const user = await this.usersService.findOneByEmail(email);
     if (!user) {
       return null;
     }
@@ -47,7 +47,7 @@ export class AuthService {
     const user = await this.usersService.findOneByEmail(req.user.email);
     if (!user) {
       const newUser = await this.db
-        .insert(schema.user)
+        .insert(schema.users)
         .values({
           email: req.user.email,
           password: undefined,

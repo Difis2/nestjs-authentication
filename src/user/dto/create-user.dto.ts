@@ -1,9 +1,8 @@
-import { IsNotEmpty, IsString, MinLength } from 'class-validator';
+import { IsEmail, IsNotEmpty, MinLength } from 'class-validator';
 
 export class SignInDto {
-  @IsString()
-  @MinLength(8)
-  username: string;
+  @IsEmail()
+  email: string;
 
   @IsNotEmpty()
   @MinLength(8)
@@ -11,9 +10,8 @@ export class SignInDto {
 }
 
 export class CreateUserDto {
-  @IsString()
-  @MinLength(8)
-  username: string;
+  @IsEmail()
+  email: string;
 
   @IsNotEmpty()
   @MinLength(8)
