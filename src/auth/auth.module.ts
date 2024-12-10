@@ -9,6 +9,8 @@ import { JwtStrategy } from './strategys/jwt.strategy';
 import { GoogleStrategy } from './strategys/google.strategy';
 import { MailerModule } from '@nestjs-modules/mailer';
 
+const isProduction = process.env.NODE_ENV === 'production';
+
 @Module({
   controllers: [AuthController],
   providers: [AuthService, ...drizzleProvider, UsersService, LocalStrategy, JwtStrategy, GoogleStrategy],
@@ -24,11 +26,11 @@ import { MailerModule } from '@nestjs-modules/mailer';
           user: process.env.EMAIL_USERNAME,
           pass: process.env.EMAIL_PASSWORD,
         },
-        secure: false,
-        port: 25,
-        tls: {
-          rejectUnauthorized: false,
-        },
+        secure: true,
+        port: 465,
+        tls: isProduction
+          ? {} // Enforce stricter rules in production
+          : { rejectUnauthorized: false }, // Relax rules for development
       },
     }),
   ],

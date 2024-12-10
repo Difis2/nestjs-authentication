@@ -47,4 +47,10 @@ export class UsersService {
   remove(id: number) {
     return `This action removes a #${id} user`;
   }
+  async updateVerification(userId: number): Promise<void> {
+    await this.db
+      .update(schema.users)
+      .set({ isEmailVerified: true }) // Set the `isEmailVerified` field to true
+      .where(eq(schema.users.id, userId)); // Filter by user ID
+  }
 }

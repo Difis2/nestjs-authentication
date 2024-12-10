@@ -1,4 +1,16 @@
-import { Body, Controller, Post, HttpCode, HttpStatus, Get, Request, UseGuards, Res } from '@nestjs/common';
+import {
+  Body,
+  Controller,
+  Post,
+  HttpCode,
+  HttpStatus,
+  Get,
+  Request,
+  UseGuards,
+  Query,
+  Req,
+  HttpException,
+} from '@nestjs/common';
 import { AuthService } from './auth.service';
 import { CreateUserDto } from '../user/dto/create-user.dto';
 import { LocalAuthGuard } from './guards/local.guard';
@@ -34,14 +46,26 @@ export class AuthController {
   googleAuthRedirect(@Request() req) {
     return this.authService.googleLogin(req);
   }
-  @UseGuards(JwtAuthGuard)
+  @UseGuards(JwtAuthGuard) // Ensure the user is authenticated before sending an email
   @Get('send-email')
-  sendMailer(@Res() response: any) {
-    const mail = this.authService.sendMail();
-
-    return response.status(200).json({
-      message: 'success',
-      mail,
-    });
+  async sendVerificationEmail(@Req() request: any) {
+    const userEmail = request.user.email; // Get user email from the request or JWT payload
+    await this.authService.sendVerificationEmail(userEmail);
+    return {
+      message: 'Verification email sent successfully!',
+    };
+  }
+  // Endpoint to verify the token
+  @Get('verify-email')
+  async verifyEmail(@Query('token') token: string) {
+    try {
+      const isVerify = await this.authService.verifyEmail(token);
+      if (!isVerify) {
+        throw new HttpException('User not found', HttpStatus.BAD_REQUEST);
+      }
+      return { message: 'Email successfully verified!' };
+    } catch (error) {
+      throw new HttpException('Invalid or expired token', HttpStatus.BAD_REQUEST);
+    }
   }
 }

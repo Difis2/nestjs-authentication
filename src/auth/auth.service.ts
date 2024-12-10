@@ -19,9 +19,21 @@ export class AuthService {
   ) {}
 
   async login(user: User): Promise<any> {
+    // Check the user's role
     const payload = { sub: user.id, email: user.email };
+    // If the user is an admin, generate an admin token with additional claims
+    if (user.role === 'admin') {
+      payload['role'] = 'admin';
+      return {
+        access_token: await this.jwtService.signAsync(payload),
+        role: 'admin',
+      };
+    }
+
+    // For regular users, generate a standard token
     return {
       access_token: await this.jwtService.signAsync(payload),
+      role: 'user',
     };
   }
   async register(dto: CreateUserDto): Promise<any> {
@@ -65,14 +77,45 @@ export class AuthService {
       user: req.user,
     };
   }
-  async sendMail() {
-    const html = `<p>Hello, <br/> <br/> Thank you for using our app! Here is your verification code to continue:</p> <h1>123456</h1> <p>Please enter this code on the verification page to proceed. If you did not request this code, you can safely ignore it or contact our support team. <br/> <br/> Thank you, <br/>The Shida Team</p> <hr/> <p style="text-align:center"><strong>OurApp</strong> <br/> ourapp  |  Help Center  |  Privacy Policy  |  Terms of Service <br/> Connect with us: <br/>  Facebook  |  Twitter  |  LinkedIn <br/> <br/> © 2023 Shida. All Rights Reserved.</p> `;
+  async generateVerificationToken(userEmail: string): Promise<string> {
+    const payload = { email: userEmail };
+    return await this.jwtService.signAsync(payload, {
+      secret: process.env.VERIFY_JWT_TOKEN, // Use a strong secret key
+      expiresIn: '1h', // Expiration time (1 hour)
+    });
+  }
+  // Send verification email with a verification link
+  async sendVerificationEmail(userEmail: string): Promise<void> {
+    const verificationToken = await this.generateVerificationToken(userEmail);
 
-    this.mailService.sendMail({
-      from: 'Kingsley Okure <kingsleyokgeorge@gmail.com>',
-      to: 'diogofgsoares@gmail.com',
-      subject: `How to Send Emails with Nodemailer`,
+    const verificationLink = `${process.env.APP_URL}/api/auth/verify-email?token=${verificationToken}`;
+
+    const html = `
+        <p>Hello,</p>
+        <p>Thank you for registering. Please click the link below to verify your email address:</p>
+        <a href="${verificationLink}">Verify Email</a>
+        <p>If you did not request this, please ignore this email.</p>
+      `;
+
+    await this.mailService.sendMail({
+      to: userEmail,
+      subject: 'Email Verification',
       html: html,
     });
+  }
+  async verifyEmail(token: string): Promise<boolean> {
+    const decoded = await this.jwtService.verifyAsync(token, {
+      secret: process.env.VERIFY_JWT_TOKEN, // Use the same secret used to sign the token
+    });
+
+    // Find user by email and activate account
+    const user = await this.usersService.findOneByEmail(decoded.email);
+    if (!user) {
+      return false;
+    }
+
+    // Set the user's email verified status to true
+    await this.usersService.updateVerification(user.id); // Update the user in the database
+    return true;
   }
 }
