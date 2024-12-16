@@ -21,20 +21,26 @@ export class AuthService {
   async login(user: User): Promise<any> {
     // Check the user's role
     const payload = { sub: user.id, email: user.email };
-    // If the user is an admin, generate an admin token with additional claims
-    if (user.role === 'admin') {
-      payload['role'] = 'admin';
+
+    const userEntry = await this.usersService.findOneByEmail(user.email);
+    if (userEntry.isEmailVerified) {
+      if (user.role === 'admin') {
+        // If the user is an admin, generate an admin token with additional claims
+        payload['role'] = 'admin';
+        return {
+          access_token: await this.jwtService.signAsync(payload),
+          role: 'admin',
+        };
+      }
+
+      // For regular users, generate a standard token
       return {
         access_token: await this.jwtService.signAsync(payload),
-        role: 'admin',
+        role: 'user',
       };
+    } else {
+      await this.sendVerificationEmail(user.email);
     }
-
-    // For regular users, generate a standard token
-    return {
-      access_token: await this.jwtService.signAsync(payload),
-      role: 'user',
-    };
   }
   async register(dto: CreateUserDto): Promise<any> {
     const user = await this.usersService.findOneByEmail(dto.email);
@@ -103,7 +109,7 @@ export class AuthService {
       html: html,
     });
   }
-  async verifyEmail(token: string): Promise<boolean> {
+  async verifyEmail(token: string): Promise<any> {
     const decoded = await this.jwtService.verifyAsync(token, {
       secret: process.env.VERIFY_JWT_TOKEN, // Use the same secret used to sign the token
     });
@@ -113,9 +119,9 @@ export class AuthService {
     if (!user) {
       return false;
     }
-
+    const payload = { sub: user.id, email: user.email };
     // Set the user's email verified status to true
     await this.usersService.updateVerification(user.id); // Update the user in the database
-    return true;
+    return { access_token: await this.jwtService.signAsync(payload), role: 'user' };
   }
 }
